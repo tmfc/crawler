@@ -18,7 +18,7 @@ class status_reporter
 		status_reporter::$job_name = $job_name;
 		$host_name = getenv('HOSTNAME');
 		status_reporter::$host = empty($host_name)?"default":$host_name;
-		status_reporter::$job_status = job_status::get_by_name_and_host(status_reporter::$job_name, status_reporter::$host);
+		status_reporter::$job_status = job_status::find_by_name_and_host(status_reporter::$job_name, status_reporter::$host);
 		if(empty(status_reporter::$job_status))
 		{
 			status_reporter::$job_status = new job_status();
@@ -27,7 +27,7 @@ class status_reporter
 			status_reporter::$job_status->status = job_status::NOT_START; //尚未开始
 			status_reporter::$job_status->extra_status = serialize(status_reporter::$extra_status);
 			status_reporter::$job_status->start_time = date('c');
-			status_reporter::$job_status->create();
+			status_reporter::$job_status->save();
 		}
 		else
 		{

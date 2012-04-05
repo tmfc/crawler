@@ -1,4 +1,5 @@
 <?php
+require_once dirname(__FILE__)."/lib/helper.php";
 abstract class base_url_provider
 {
 	abstract public function get_next_url();
@@ -8,73 +9,20 @@ abstract class base_url_provider
 		return ;
 	}
 	
-	protected function req_url($url = "", $post_data = NULL) {
-		$cookie_jar = COOKIE_FILE;
-		$res = curl_init ();
-		curl_setopt ( $res, CURLOPT_URL, $url );
-		curl_setopt ( $res, CURLOPT_HEADER, 0 );
-		curl_setopt ( $res, CURLOPT_RETURNTRANSFER, 1 );
-		curl_setopt ( $res, CURLOPT_TIMEOUT, 20);
-		curl_setopt ( $res, CURLOPT_ENCODING, "identity" );
-		curl_setopt ( $res, CURLOPT_COOKIEFILE, $cookie_jar );
-		curl_setopt ( $res, CURLOPT_COOKIEJAR, $cookie_jar );
-	
-		//User-Agent	Mozilla/5.0 (Windows; U; Windows NT 5.1; zh-CN; rv:1.9.2.13) Gecko/20101203 Firefox/3.6.13
-		curl_setopt ( $res, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 6.1; rv:8.0.1) Gecko/20100101 Firefox/8.0.1' );
-		//curl_setopt ( $res, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows; U; Windows NT 5.1; zh-CN; rv:1.9.2.13) Gecko/20101203 Firefox/3.6.13;)' );
-		if ($post_data != NULL && ! empty ( $post_data )) {
-			//post
-			curl_setopt ( $res, CURLOPT_POST, 1 );
-			curl_setopt ( $res, CURLOPT_POSTFIELDS, $post_data );
-		}
-		$tt = curl_exec ( $res );
-		$code = curl_getinfo ( $res, CURLINFO_HTTP_CODE );
-		//缓存http状态
-		$this->http_status_code = $code;
-		curl_close ( $res );
-		if ($code >= 200 && $code < 400) {
-			return $tt;
-		} else {
-			@file_put_contents ( "log_error_url", "\r\n\r\n***************************\r\n\r\n$code.[" . date ( 'l' ) . "]=>$url   \r\n$tt", FILE_APPEND );
-			return false;
-		}
-	}
-	
 	protected function get_url_content($url, $s_charact = "gbk", $d_charact = "UTF-8//IGNORE") {
-		//echo $s_charact;
-		$urlContent = $this->req_url ( $url );
-	
-		status_reporter::update('url',$url);
-		status_reporter::update('url_count',"++");
-		status_reporter::update("http_status_{$this->http_status_code}_count","++");
-	
-		if (! $urlContent) {
-			return FALSE;
-		}
-	
-		if ($s_charact == $d_charact) {
-			return $urlContent;
-		}
-		$content = iconv ( $s_charact, $d_charact, $urlContent );
-		return $content;
+		return helper::get_url_content($url, $s_charact = "gbk", $d_charact = "UTF-8//IGNORE");
 	}
 	
 	protected function get_preg_matchs($str, $preg) {
-		preg_match_all ( $preg, $str, $match_array, PREG_SET_ORDER );
-		return $match_array;
+		return helper::get_preg_matchs($str, $preg);
 	}
 	
 	protected function get_preg_match($str, $preg) {
-		preg_match ( $preg, $str, $match );
-		return $match;
+		return helper::get_preg_match($str, $preg);
 	}
 	
 	protected function get_preg_match_group($str, $preg,$group_name) {
-		preg_match ( $preg, $str, $match );
-		if(key_exists($group_name, $match))
-			return $match[$group_name];
-		else
-			return FALSE;
+		return helper::get_preg_match_group($str, $preg,$group_name);
 	}
 }
 
@@ -249,7 +197,7 @@ abstract class category_list_url_provider extends base_url_provider
 
 class onepage_url_provider extends base_url_provider
 {
-	public $init_url;
+	private $init_url;
 	public $visited = false;
 	
 	public function __construct($init_url)
@@ -265,6 +213,45 @@ class onepage_url_provider extends base_url_provider
 		{
 			$this->visited = true;
 			return $this->init_url;
+		}
+	}
+}
+
+class numberic_list_page_url_provider extends base_url_provider
+{
+	private $init_url;
+	private $url_template;
+	private $start = 1;
+	private $end;
+	
+	private $current;
+	private $init_returned = false;
+	
+	public function __construct($url_template,$start,$end,$init_url = null)
+	{
+		$this->url_template = $url_template;
+		$this->start = $start;
+		$this->end = $end;
+		$this->current = $start;
+		
+		if(!empty($init_url))
+			$this->init_url = $init_url;
+	}
+	
+	public function get_next_url()
+	{
+		if(!empty($this->init_url) && $this->init_returned == false)
+		{
+			$this->init_returned = true;
+			return $this->init_url;
+		}
+		if($this->current > $this->end)
+			return false;
+		else
+		{
+			$url = str_replace('%num%',$this->current,$this->url_template);
+			$this->current ++;
+			return $url;
 		}
 	}
 }

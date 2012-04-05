@@ -4,10 +4,11 @@ require_once dirname(__FILE__) . '/base_crawler.php';
 class test_crawler extends base_crawler {
 	public $site_charset = 'GBK';
 	protected $max_count = 0;
-	public $domain_id = 26;
 	
 	public function parse_content($content) {
-		return array();
+		$result = helper::get_preg_matchs($content, '%<b class="f14"><a href="(?P<url>http://\w+\.pconline\.com\.cn/\w+(?:/\w+)?/\d+/\d+\.html)" target="_blank">(?P<title>[^<]*)</a></b>%');
+		var_dump(count($result));
+		return $result;
 	}
 	public function extra_save_result($product) {
 		return false;
@@ -18,7 +19,6 @@ $crawler = new test_crawler ();
 $crawler->debug_mode = true;
 $crawler->resume_crawl = true;
 
-$crawler->url_provider = new category_url_provider ( $crawler->domain_id );//new pclady_url_provider( );
-$crawler->url_provider->max_page_regex = '%>(?P<max_page>[\d]+)</a><a href=\'([^\']+?)\'\s+class=\'next\'>下一页</a>%s';
-$crawler->result_saver = new blackhole_saver();
+$crawler->url_provider = new numberic_list_page_url_provider ( 'http://mobile.pconline.com.cn/news/index_%num%.html',1,34,'http://mobile.pconline.com.cn/news/' );
+$crawler->result_saver = new url_saver(1);
 $crawler->do_crawl ();

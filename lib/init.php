@@ -10,3 +10,5 @@ ActiveRecord\Config::initialize(function($cfg)
 	// you can change the default connection with the below
 	//$cfg->set_default_connection('production');
 });
+
+content::connection()->query("set names 'utf8'");

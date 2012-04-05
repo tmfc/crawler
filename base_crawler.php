@@ -3,8 +3,6 @@ require_once dirname(__FILE__)."/url_provider.php";
 require_once dirname(__FILE__)."/result_saver.php";
 require_once dirname(__FILE__)."/lib/status_reporter.php";
 
-define ( "COOKIE_FILE", dirname(__FILE__) . '/cookie.txt' );
-
 abstract class base_crawler
 {
 	//站点编码
@@ -17,9 +15,6 @@ abstract class base_crawler
 	protected $current_url = null;
 	protected $count = 0;
 	protected $max_count = 0;
-	
-	//抓取网页的状态码（200、404等）
-	private $http_status_code = 0;
 	
 	//是否是调试模式
 	public $debug_mode = false;
@@ -101,16 +96,16 @@ abstract class base_crawler
 				$content = $this->get_url_content($url,$this->site_charset);
 
 				//记录debug信息
-				$this->debug_info($url . ' ' .$this->http_status_code,'url');
+				$this->debug_info($url . ' ' .helper::$http_status_code,'url');
 				$this->debug_info($content,'last_content',false,false);
 				status_reporter::update("memory",round((memory_get_usage(true)/1024/1024),2));
 				
 				//通知url_provider当前url的抓取状态和抓取内容，供url_provider进行判断
-				$this->url_provider->result_notify($this->http_status_code,$content);
+				$this->url_provider->result_notify(helper::$http_status_code,$content);
 	
 				if ($content === false)
 				{
-					$this->debug_info("crawler continue:get_url_content return false,url:$url,status:{$this->http_status_code}");
+					$this->debug_info("crawler continue:get_url_content return false,url:$url,status:" . helper::$http_status_code);
 					status_reporter::update('content_false_count',"++");
 					continue;
 				}
@@ -161,100 +156,9 @@ abstract class base_crawler
 		}
 	}
 	
-	protected function req_url($url = "", $post_data = NULL) {
-		$cookie_jar = COOKIE_FILE;
-		$res = curl_init ();
-		curl_setopt ( $res, CURLOPT_URL, $url );
-		curl_setopt ( $res, CURLOPT_HEADER, 0 );
-		curl_setopt ( $res, CURLOPT_RETURNTRANSFER, 1 );
-		curl_setopt ( $res, CURLOPT_TIMEOUT, 20);
-		curl_setopt ( $res, CURLOPT_ENCODING, "identity" );
-		curl_setopt ( $res, CURLOPT_COOKIEFILE, $cookie_jar );
-		curl_setopt ( $res, CURLOPT_COOKIEJAR, $cookie_jar );
-		
-		//User-Agent	Mozilla/5.0 (Windows; U; Windows NT 5.1; zh-CN; rv:1.9.2.13) Gecko/20101203 Firefox/3.6.13
-		curl_setopt ( $res, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 6.1; rv:8.0.1) Gecko/20100101 Firefox/8.0.1' );
-		//curl_setopt ( $res, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows; U; Windows NT 5.1; zh-CN; rv:1.9.2.13) Gecko/20101203 Firefox/3.6.13;)' );
-		if ($post_data != NULL && ! empty ( $post_data )) {
-			//post
-			curl_setopt ( $res, CURLOPT_POST, 1 );
-			curl_setopt ( $res, CURLOPT_POSTFIELDS, $post_data );
-		}
-		$tt = curl_exec ( $res );
-		$code = curl_getinfo ( $res, CURLINFO_HTTP_CODE );
-		//缓存http状态
-		$this->http_status_code = $code;
-		curl_close ( $res );
-		if ($code >= 200 && $code < 400) {
-			return $tt;
-		} else {
-			@file_put_contents ( "log_error_url", "\r\n\r\n***************************\r\n\r\n$code.[" . date ( 'l' ) . "]=>$url   \r\n$tt", FILE_APPEND );
-			return false;
-		}
-	}
-	
 	protected function get_url_content($url, $s_charact = "gbk", $d_charact = "UTF-8//IGNORE") {
-		//echo $s_charact;
-		$urlContent = $this->req_url ( $url );
-		
-		status_reporter::update('url',$url);
-		status_reporter::update('url_count',"++");
-		status_reporter::update("http_status_{$this->http_status_code}_count","++");
-		
-		if (! $urlContent) {
-			return FALSE;
-		}
-	
-		if ($s_charact == $d_charact) {
-			return $urlContent;
-		}
-		$content = iconv ( $s_charact, $d_charact, $urlContent );
-		return $content;
+		return helper::get_url_content($url, $s_charact = "gbk", $d_charact = "UTF-8//IGNORE");
 	}
-	
-	public function get_brand_id($brand_name = "", $brand_url = "", $brand_en = "", $add_new = false) {
-		$brand_name = trim ( $brand_name );
-		$brand_en = trim ( $brand_en );
-		if (empty ( $brand_name ) && empty( $brand_en )) {
-			//$brand_name = $brand_en;
-			return 0;
-		}
-		$brand = Brand::get_brand_by_name ( $brand_name );
-		if ($brand) {
-			return $brand [0]->id;
-		} else {
-			if (empty ( $brand_en )) {
-				$brand_en = $brand_name;
-			}
-			$brand = Brand::get_brand_by_name ( $brand_en );
-			if ($brand) {
-				return $brand [0]->id;
-			}
-			if ($add_new) {
-				$brand = new Brand ();
-				$brand->name = $brand_name;
-				$brand->name_en = $brand_en;
-				$brand->brand_desc = $brand_name;
-				$brand->mapping_keywords = $brand_name;
-				$brand->site_url = $brand_url;
-				$brand_id = Brand::add_brand ( $brand );
-				return $brand_id;
-			}
-			return 0;
-		}
-	}
-	
-	public function save_brand_category_ref($brand_id, $category_id) {
-		$brand_category_ref_id = Brand_category_ref::get_brand_category_ref ( $brand_id, $category_id );
-		if (! $brand_category_ref_id) {
-			$brand_category_ref = new Brand_category_ref ();
-			$brand_category_ref->brand_id = $brand_id;
-			$brand_category_ref->category_id = $category_id;
-			$brand_category_ref->goods_num = 0;
-			Brand_category_ref::add_brand_category_ref ( $brand_category_ref );
-		}
-	}
-	
 }
 
 
