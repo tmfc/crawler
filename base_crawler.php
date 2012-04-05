@@ -1,7 +1,7 @@
 <?php
 require_once dirname(__FILE__)."/url_provider.php";
 require_once dirname(__FILE__)."/result_saver.php";
-require_once dirname(__FILE__)."/helper/status_reporter.php";
+require_once dirname(__FILE__)."/lib/status_reporter.php";
 
 define ( "COOKIE_FILE", dirname(__FILE__) . '/cookie.txt' );
 
@@ -144,7 +144,7 @@ abstract class base_crawler
 		{
 			$this->debug_info($e->getMessage(),'exception');
 			$this->debug_info($e->getTraceAsString(),'exception');
-			SendEmailToAdmin("爬虫" . get_class($this) . "出现异常", $e->getMessage() . $e->getTraceAsString());
+			//SendEmailToAdmin("爬虫" . get_class($this) . "出现异常", $e->getMessage() . $e->getTraceAsString());
 			status_reporter::end(4);
 		}
 	}
