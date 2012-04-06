@@ -1,4 +1,5 @@
 <?php
+require_once dirname(__FILE__)."/lib/init.php";
 require_once dirname(__FILE__)."/url_provider.php";
 require_once dirname(__FILE__)."/result_saver.php";
 require_once dirname(__FILE__)."/lib/status_reporter.php";

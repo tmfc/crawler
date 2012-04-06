@@ -7,7 +7,6 @@ class test_crawler extends base_crawler {
 	
 	public function parse_content($content) {
 		$result = helper::get_preg_matchs($content, '%<b class="f14"><a href="(?P<url>http://\w+\.pconline\.com\.cn/\w+(?:/\w+)?/\d+/\d+\.html)" target="_blank">(?P<title>[^<]*)</a></b>%');
-		var_dump(count($result));
 		return $result;
 	}
 	public function extra_save_result($product) {
