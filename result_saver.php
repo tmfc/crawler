@@ -35,3 +35,30 @@ class url_saver extends base_result_saver {
 		}
 	}
 }
+
+class content_saver extends base_result_saver {
+	private $source_id;
+	public function __construct($source_id)	{
+		$this->source_id = $source_id;
+	}
+	public function save_result($result) {
+		if(empty($result['url']))
+		{
+			throw new Exception('no url in result!');
+		}
+		$md5 = md5($result['url']);
+		$content = content::find_by_sourceid_and_md5($this->source_id,$md5);
+		if(!content)
+		{
+			throw new Exception('no content in DB');
+		}
+		else
+		{
+			$content->content = json_encode($result);
+			$content->attachment_path = $result['attachment_path'];
+			$content->status = content::CONTENT_CRAWLED;
+			$content->save();
+		}
+	}
+	
+}

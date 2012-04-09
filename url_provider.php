@@ -284,6 +284,8 @@ class content_db_url_provider extends base_url_provider
 		}
 		if(count($this->content_db_url_list) == 0)
 			return false;
-		return $this->content_db_url_list[$this->current_index]->url;
+		$ret = $this->content_db_url_list[$this->current_index]->url;
+		$this->current_index ++;
+		return $ret;
 	}
 }
