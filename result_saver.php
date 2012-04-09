@@ -24,6 +24,7 @@ class url_saver extends base_result_saver {
 			if(!$content)
 			{
 				$content = new content();
+				$content->sourceid = $this->source_id;
 				$content->url = $url;
 				$content->md5 = $md5;
 				$content->title = $title;

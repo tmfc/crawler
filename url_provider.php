@@ -255,3 +255,35 @@ class numberic_list_page_url_provider extends base_url_provider
 		}
 	}
 }
+
+class content_db_url_provider extends base_url_provider
+{
+	private $source_id;
+	private $current_index;
+	private $current_page;
+	private $page_size = 100;
+	private $content_db_url_list;
+	public function __construct($source_id)
+	{
+		$this->source_id = $source_id;
+		
+		$this->current_page = 0;
+		$this->get_content_db_url_list();
+	}
+	
+	protected function get_content_db_url_list()
+	{
+		$this->content_db_url_list = content::find('all',array('conditions' => array('sourceid' => $this->source_id),'limit' => $this->page_size,'offset' => $this->current_page * $this->page_size));
+		$this->current_page ++;
+		$this->current_index = 0;
+	}
+	public function get_next_url(){
+		if($this->current_index == count($this->content_db_url_list) - 1)
+		{
+			$this->get_content_db_url_list();	
+		}
+		if(count($this->content_db_url_list) == 0)
+			return false;
+		return $this->content_db_url_list[$this->current_index]->url;
+	}
+}
