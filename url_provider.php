@@ -273,7 +273,7 @@ class content_db_url_provider extends base_url_provider
 	
 	protected function get_content_db_url_list()
 	{
-		$this->content_db_url_list = content::find('all',array('conditions' => array('sourceid' => $this->source_id),'limit' => $this->page_size,'offset' => $this->current_page * $this->page_size));
+		$this->content_db_url_list = content::find('all',array('conditions' => array('sourceid' => $this->source_id,'status' => content::INIT),'limit' => $this->page_size,'offset' => $this->current_page * $this->page_size));
 		$this->current_page ++;
 		$this->current_index = 0;
 	}

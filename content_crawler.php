@@ -7,12 +7,13 @@ define('IMG_SERVER','http://img1.feichang.com/news/');
 class content_crawler extends base_crawler {
 	//public $site_charset = 'GBK';
 	private $content_part_rules;
-	protected $max_count = 10;
+	protected $max_count = 0;
 	protected $source;
 	
 	protected $attachment_path_inited = false;
 	protected $attachment_path;
 	protected $current_download_id;
+	protected $page_url;
 	protected $result;
 	
 	public function __construct($source_id,$source)
@@ -31,6 +32,7 @@ class content_crawler extends base_crawler {
 	public function parse_content($page_content) {
 		//for every url,set attachment path inited as false
 		$this->attachment_path_inited = false;
+		$this->page_url = array();
 		$this->result = array();
 		$this->result['url'] = $this->current_url;
 		//process $content,remove newlines
@@ -66,17 +68,12 @@ class content_crawler extends base_crawler {
 		//do filter,noly regex supplied
 		if(!empty($rule->filter_rule))
 		{
-			$rule->filter_rule = str_replace("\r","", $rule->filter_rule);
-			$filter_rules = explode("\n", $rule->filter_rule);
+			$filter_rules = explode("|||", $rule->filter_rule);
 			foreach($filter_rules as $filter_r)
 			{
-				$filter_rule = explode('[|]',$filter_r);
+				$filter_rule = explode('[|]',trim($filter_r));
 				$org_len = strlen($ret);
 				$ret = preg_replace($filter_rule[0], $filter_rule[1], $ret);
-				if($org_len == strlen($ret))
-				{
-					echo 'filter not match';
-				}
 			}
 		}
 		return trim($ret);
@@ -108,6 +105,38 @@ class content_crawler extends base_crawler {
 			}
 			
 		}
+		if($rule->paged_part == 1)
+		{
+			//全部列出
+			if($this->source->content_page_type == 1)
+			{
+				
+			}
+			//下一页
+			elseif($this->source->content_page_type == 2)
+			{
+				$next_url = helper::get_preg_match_group($page_content, $this->source->content_page_rule, 'next');
+				
+				//end of content
+				if(empty($next_url))
+					return $html;
+				else
+				{
+					$next_page_content = $this->get_url_content($next_url,$this->site_charset);
+					$this->debug_info($next_url . ' ' .helper::$http_status_code,'url');
+					$this->debug_info($next_page_content,'last_content',false,false);
+					$next_page_content = preg_replace('/\r|\n/', '', $next_page_content);
+					if(!empty($next_page_content))
+					{
+						$next_html = $this->get_content_by_rule($next_page_content, $rule);
+						if(!empty($next_html))
+							return $html . '[page]' . $next_html;
+						else
+							return $html;
+					}
+				}
+			}
+		}
 		return $html;
 	}
 	
@@ -123,7 +152,8 @@ class content_crawler extends base_crawler {
 		}
 		$this->attachment_path = date('Y',$publish_time) . '/' . date('md',$publish_time) . '/' . md5($this->current_url). '/';
 		$this->result['attachment_path'] = $this->attachment_path;
-		mkdir(DOWNLOAD_PATH . $this->attachment_path,0755,true);
+		if(!is_dir(DOWNLOAD_PATH . $this->attachment_path))
+			mkdir(DOWNLOAD_PATH . $this->attachment_path,0755,true);
 		
 		$this->current_download_id = 1;
 		
@@ -131,7 +161,8 @@ class content_crawler extends base_crawler {
 		$this->attachment_path_inited = true;
 	}
 }
-$id = $argv[1];
+//$id = $argv[1];
+$id = 2;
 $source = source::find($id);
 if(!$source)
 {

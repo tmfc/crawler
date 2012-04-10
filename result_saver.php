@@ -46,17 +46,25 @@ class content_saver extends base_result_saver {
 		{
 			throw new Exception('no url in result!');
 		}
+
 		$md5 = md5($result['url']);
 		$content = content::find_by_sourceid_and_md5($this->source_id,$md5);
-		if(!content)
+		if(!$content)
 		{
 			throw new Exception('no content in DB');
 		}
 		else
 		{
-			$content->content = json_encode($result);
-			$content->attachment_path = $result['attachment_path'];
-			$content->status = content::CONTENT_CRAWLED;
+			if(empty($result['title']))
+			{
+				$content->status = content::CONTENT_CRAW_FAILED;
+			}
+			else 
+			{
+				$content->content = json_encode($result);
+				$content->attachment_path = $result['attachment_path'];
+				$content->status = content::CONTENT_CRAWLED;
+			}
 			$content->save();
 		}
 	}
