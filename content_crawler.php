@@ -7,7 +7,7 @@ define('IMG_SERVER','http://img1.feichang.com/news/');
 class content_crawler extends base_crawler {
 	//public $site_charset = 'GBK';
 	private $content_part_rules;
-	protected $max_count = 0;
+	protected $max_count = 1;
 	protected $source;
 	
 	protected $attachment_path_inited = false;
@@ -110,7 +110,34 @@ class content_crawler extends base_crawler {
 			//全部列出
 			if($this->source->content_page_type == 1)
 			{
+				$this->page_url[] = $this->current_url;
+				//取出包含所有页码的html
+				$pager_rule = explode('[content]', $this->source->content_page_rule);
+				$c = explode($pager_rule[0], $page_content);
+				$pager_html = explode($pager_rule[1], $c[1]);
+				$pager_html = $pager_html[0];
 				
+				$links = helper::get_preg_matchs($pager_html, '/<a[^>]*href=[\'"](?P<url>[^"\']+)[\'"]/i');
+				foreach($links as $link)
+				{
+					$next_url = $link['url'];
+					if(empty($next_url) || $next_url == '#')
+						continue;
+					if(in_array($next_url,$this->page_url))
+						continue;
+					
+					$next_page_content = $this->get_url_content($next_url,$this->site_charset);
+					$this->page_url[] = $next_url;
+					$this->debug_info($next_url . ' ' .helper::$http_status_code,'url');
+					$this->debug_info($next_page_content,'last_content',false,false);
+					$next_page_content = preg_replace('/\r|\n/', '', $next_page_content);
+					if(!empty($next_page_content))
+					{
+						$next_html = $this->get_content_by_rule($next_page_content, $rule);
+						if(!empty($next_html))
+							$html = $html . '[page]' . $next_html;
+					}
+				}
 			}
 			//下一页
 			elseif($this->source->content_page_type == 2)
@@ -161,8 +188,8 @@ class content_crawler extends base_crawler {
 		$this->attachment_path_inited = true;
 	}
 }
-//$id = $argv[1];
-$id = 2;
+$id = $argv[1];
+//$id = 2;
 $source = source::find($id);
 if(!$source)
 {

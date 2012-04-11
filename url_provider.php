@@ -278,7 +278,7 @@ class content_db_url_provider extends base_url_provider
 		$this->current_index = 0;
 	}
 	public function get_next_url(){
-		if($this->current_index == count($this->content_db_url_list) - 1)
+		if($this->current_index == count($this->content_db_url_list))
 		{
 			$this->get_content_db_url_list();	
 		}
