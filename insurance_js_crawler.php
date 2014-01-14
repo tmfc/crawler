@@ -118,7 +118,7 @@ class insurance_info_js_result_saver extends base_result_saver
 	}
 }
 
-class weizhang_js_crawler extends base_crawler {
+class insurance_js_crawler extends base_crawler {
 	public $base_url = "http://221.226.36.226:9003/";
 	public $site_charset = 'GBK';
 	protected $max_count = 0;
@@ -153,7 +153,7 @@ class weizhang_js_crawler extends base_crawler {
 	}
 }
 
-$crawler = new weizhang_js_crawler ();
+$crawler = new insurance_js_crawler ();
 $crawler->debug_mode = true;
 $crawler->need_captcha = true;
 $crawler->crawl_by_post = true;
