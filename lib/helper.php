@@ -74,6 +74,34 @@ class helper
 		return $content;
 	}
 	
+	public static function post_url_content($url, $post_data, $s_charact = "gbk", $d_charact = "UTF-8//IGNORE") {
+		//echo $s_charact;
+		$urlContent = self::req_url ( $url, $post_data );
+	
+		status_reporter::update('url',$url);
+		status_reporter::update('post_data',$post_data);
+		status_reporter::update('url_count',"++");
+		status_reporter::update("http_status_" . self::$http_status_code . "_count","++");
+	
+		if (! $urlContent) {
+			return FALSE;
+		}
+	
+		if ($s_charact == $d_charact) {
+			return $urlContent;
+		}
+		$content = iconv ( $s_charact, $d_charact, $urlContent );
+		return $content;
+	}
+	
+	public static function download_image($img_url,$dest_path)
+	{
+		$img_data = self::req_url ( $img_url );
+		$local_file = fopen($dest_path , 'w');
+		fwrite($local_file, $img_data);
+		fclose($local_file);
+	}
+	
 	public static function createthumb($name,$filename,$new_w,$new_h)
 	{
 		$system=explode(".",$name);

@@ -3,6 +3,11 @@ require_once dirname(__FILE__)."/lib/helper.php";
 abstract class base_url_provider
 {
 	abstract public function get_next_url();
+	
+	public function get_next_post_data()
+	{
+		return "";
+	}
 
 	public function result_notify($status_code,$content)
 	{
@@ -277,6 +282,7 @@ class content_db_url_provider extends base_url_provider
 		$this->current_page ++;
 		$this->current_index = 0;
 	}
+	
 	public function get_next_url(){
 		if($this->current_index == count($this->content_db_url_list))
 		{

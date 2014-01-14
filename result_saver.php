@@ -9,6 +9,22 @@ class blackhole_saver extends base_result_saver {
 	}
 }
 
+class echo_saver extends base_result_saver {
+	public function save_result($result) {
+		echo $result;
+	}
+}
+
+class file_saver extends base_result_saver {
+	public function __construct($filename)	{
+		$this->filename = $filename;
+	}
+	
+	public function save_result($result) {
+		file_put_contents($this->filename, $result);
+	}
+}
+
 class url_saver extends base_result_saver {
 	private $source_id;
 	

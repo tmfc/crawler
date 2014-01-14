@@ -14,11 +14,14 @@ abstract class base_crawler
 	public $result_saver = null;
 	
 	protected $current_url = null;
+	protected $current_post_data = null;
 	protected $count = 0;
 	protected $max_count = 0;
 	
 	//是否是调试模式
 	public $debug_mode = false;
+	public $need_captcha = false;
+	public $crawl_by_post = false;
 	public $fake_crawl = false;
 	public $resume_crawl = true;
 	
@@ -26,6 +29,18 @@ abstract class base_crawler
 	abstract public function parse_content($content);
 	//对结果做额外的处理
 	abstract public function extra_save_result($result);
+	
+	//获取需要post的信息，通常不需要，返回NULL
+	public function get_post_data()
+	{
+		return NULL;
+	}
+	
+	//处理验证码，通常情况不需要处理，空函数
+	protected function process_captcha($content)
+	{
+		return NULL;	
+	}
 	
 	//主方法，进行抓取
 	public function do_crawl()
@@ -53,6 +68,7 @@ abstract class base_crawler
 			while(true)
 			{
 				$this->count++;
+				$this->debug_info($this->count);
 				if($this->max_count>0 && $this->count > $this->max_count){
 					status_reporter::update('url_provider','');
 					status_reporter::end();
@@ -83,10 +99,35 @@ abstract class base_crawler
 				status_reporter::update('url_provider',$url);
 				$this->current_url = $url;
 				
+				//需要输入验证码
+				if($this->need_captcha)
+				{
+					$content = $this->get_url_content($url,$this->site_charset);
+					$this->process_captcha($content);
+				}
+				
+				//获取下一个post_data
+				if($this->crawl_by_post)
+				{
+					$post_data = $this->get_post_data();
+					if($post_data == false || empty($post_data))
+					{
+						$this->debug_info("\r\nTotal: ".$this->count."\r\n");
+						$this->debug_info("crawler end:no more post data to crawl");
+						status_reporter::update('url_provider','');
+						status_reporter::end();
+						return;
+					}
+					
+					$this->current_post_data = $post_data;
+				}
+				
 				//假抓取
 				if($this->fake_crawl)
 				{
 					$this->debug_info($url,'url');
+					if($this->crawl_by_post)
+						$this->debug_info($this->current_post_data,'post_data');
 					status_reporter::update('url_provider',$url);
 					status_reporter::update('url_count',"++");
 					status_reporter::report();
@@ -94,7 +135,14 @@ abstract class base_crawler
 				}
 				
 				//抓取页面内容
-				$content = $this->get_url_content($url,$this->site_charset);
+				if($this->crawl_by_post)
+				{
+					$content = $this->post_url_content($url,$this->current_post_data,$this->site_charset);
+				}
+				else 
+				{
+					$content = $this->get_url_content($url,$this->site_charset);
+				}
 
 				//记录debug信息
 				$this->debug_info($url . ' ' .helper::$http_status_code,'url');
@@ -159,6 +207,9 @@ abstract class base_crawler
 	
 	protected function get_url_content($url, $s_charact = "gbk", $d_charact = "UTF-8//IGNORE") {
 		return helper::get_url_content($url, $s_charact = "gbk", $d_charact = "UTF-8//IGNORE");
+	}
+	protected function post_url_content($url, $post_data,$s_charact = "gbk", $d_charact = "UTF-8//IGNORE"){
+		return helper::post_url_content($url, $post_data,$s_charact = "gbk", $d_charact = "UTF-8//IGNORE");
 	}
 }
 
