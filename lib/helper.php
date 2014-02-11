@@ -4,6 +4,7 @@ define ( "COOKIE_FILE", dirname(__FILE__) . '/cookie.txt' );
 class helper
 {
 	static public $http_status_code;
+	static public $debug_file_name = "application";
 	
 	public static function get_preg_matchs($str, $preg) {
 		preg_match_all ( $preg, $str, $match_array, PREG_SET_ORDER );
@@ -138,5 +139,14 @@ class helper
 		}
 		imagedestroy($dst_img);
 		imagedestroy($src_img);
+	}
+	
+	//调试信息
+    function debug_info($str,$type = 'trace',$echo = true,$append=true)
+	{
+		$info = date('c',time()) . ' ' . $str;
+		if($echo)
+			echo $info . PHP_EOL;
+		file_put_contents(self::$debug_file_name . "_$type.log", $info. PHP_EOL,$append?FILE_APPEND:null);
 	}
 }

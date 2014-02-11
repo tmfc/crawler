@@ -201,7 +201,7 @@ abstract class base_crawler
 			$info = date('c',time()) . ' ' . $str;
 			if($echo)
 				echo $info . PHP_EOL;
-			file_put_contents(get_class($this) . "_$type.dbg", $info. PHP_EOL,$append?FILE_APPEND:null);
+			file_put_contents(get_class($this) . "_$type.log", $info. PHP_EOL,$append?FILE_APPEND:null);
 		}
 	}
 	

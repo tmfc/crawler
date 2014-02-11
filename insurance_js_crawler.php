@@ -113,7 +113,6 @@ class insurance_info_js_result_saver extends base_result_saver
 			$insurance_info->remark = $r->remark;
 
 			$insurance_info->save();
-				
 		}
 	}
 }
@@ -131,9 +130,15 @@ class insurance_js_crawler extends base_crawler {
 		{
 			$r->vehicle_id = $frameNo;
 		}
+		
+		$vehicle_info = vehicle_info_js::find(array('vehicle_id' => $r->vehicle_id));
+		$vehicle_info->status = 1;
+		$vehicle_info->save();
+		
 		return $result;
 	}
-	public function extra_save_result($product) {
+	public function extra_save_result($content) {
+		sleep(2);
 		return false;
 	}
 	function process_captcha($content){
@@ -147,7 +152,11 @@ class insurance_js_crawler extends base_crawler {
 	}
 	function get_post_data()
 	{
-		$ret = $this->url_provider->get_next_post_data() . $this->captcha;
+		$ret = $this->url_provider->get_next_post_data();
+		if($ret == false)
+			return false;
+		else
+			$ret = $ret . $this->captcha;
 		$this->debug_info($ret);
 		return $ret;
 	}
