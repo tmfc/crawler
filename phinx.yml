@@ -1,0 +1,30 @@
+paths:
+    migrations: %%PHINX_CONFIG_DIR%%/migrations
+        
+environments:
+    default_migration_table: phinxlog
+    default_database: development
+    production:
+        adapter: mysql
+        host: localhost
+        name: crawler
+        user: crawler
+        pass: EcY59CXRnhh8h7X5
+        port: 3306
+                
+    development:
+        adapter: mysql
+        host: 10.211.55.9
+        name: crawler
+        user: crawler
+        pass: crawler
+        port: 3306
+                    
+    testing:
+        adapter: mysql
+        host: 10.211.55.9
+        name: crawler_test
+        user: crawler_test
+        pass: crawler_test
+        port: 3306
+                 
