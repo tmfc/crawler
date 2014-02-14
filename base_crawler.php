@@ -9,6 +9,8 @@ abstract class base_crawler
 	//站点编码
 	public $site_charset = 'UTF-8//IGNORE';
 	
+	public $crawler_name = '';
+	
 	//url提供者、结果保存者
 	public $url_provider = null;
 	public $result_saver = null;
@@ -50,7 +52,9 @@ abstract class base_crawler
 			ini_set('memory_limit', '1000M'); //内存限制
 			set_time_limit(0); //
 			
-			status_reporter::init(get_class($this));
+			if(empty($this->crawler_name))
+				$this->crawler_name = get_class($this);
+			status_reporter::init($this->crawler_name);
 			
 			$last_url = '';
 			//从数据库取上一次抓取保存的URL
@@ -206,10 +210,10 @@ abstract class base_crawler
 	}
 	
 	protected function get_url_content($url, $s_charact = "gbk", $d_charact = "UTF-8//IGNORE") {
-		return helper::get_url_content($url, $s_charact = "gbk", $d_charact = "UTF-8//IGNORE");
+		return helper::get_url_content($url, $s_charact, $d_charact);
 	}
 	protected function post_url_content($url, $post_data,$s_charact = "gbk", $d_charact = "UTF-8//IGNORE"){
-		return helper::post_url_content($url, $post_data,$s_charact = "gbk", $d_charact = "UTF-8//IGNORE");
+		return helper::post_url_content($url, $post_data,$s_charact, $d_charact);
 	}
 }
 

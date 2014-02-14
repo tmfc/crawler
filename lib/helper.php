@@ -67,7 +67,6 @@ class helper
 		if (! $urlContent) {
 			return FALSE;
 		}
-	
 		if ($s_charact == $d_charact) {
 			return $urlContent;
 		}

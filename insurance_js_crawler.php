@@ -16,7 +16,7 @@ class js_url_provider extends base_url_provider
 	protected function get_jiangsu_db_url_list()
 	{
 		$this->jiangsu_db_url_list = vehicle_info_js::find('all',array('conditions' => array('status' => vehicle_info_js::INIT),'limit' => $this->page_size,'offset' => $this->current_page * $this->page_size));
-		$this->current_page ++;
+		//$this->current_page ++;
 		$this->current_index = 0;
 	}
 	
